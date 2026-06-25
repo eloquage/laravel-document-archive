@@ -50,7 +50,7 @@ jobs:
       - name: Clone path dependencies
         shell: bash
         env:
-          GITHUB_TOKEN: ${ secrets.GITHUB_TOKEN }
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git clone --depth 1 "https://x-access-token:${GITHUB_TOKEN}@github.com/miguelenes/laravel-vector-search.git" "$(dirname "$GITHUB_WORKSPACE")/laravel-vector-search"
 
