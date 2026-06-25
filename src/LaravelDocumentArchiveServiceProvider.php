@@ -8,6 +8,8 @@ use Eloquage\LaravelDocumentArchive\Contracts\ManifestService;
 use Eloquage\LaravelDocumentArchive\Contracts\SourceFileLocator;
 use Eloquage\LaravelDocumentArchive\Contracts\TranscriptService;
 use Eloquage\LaravelDocumentArchive\Services\ArchivePipelineService;
+use Eloquage\LaravelDocumentArchive\Services\DocumentArchiveSearchService;
+use Eloquage\LaravelDocumentArchive\Services\DocumentArchiveTranscriptReader;
 use Eloquage\LaravelDocumentArchive\Services\ManifestService as ManifestServiceImplementation;
 use Eloquage\LaravelDocumentArchive\Services\SourceFileLocator as SourceFileLocatorImplementation;
 use Eloquage\LaravelDocumentArchive\Services\SpecialSourceService;
@@ -34,6 +36,8 @@ class LaravelDocumentArchiveServiceProvider extends PackageServiceProvider
         $this->app->singleton(SourceFileLocatorImplementation::class);
         $this->app->singleton(ArchivePipelineService::class);
         $this->app->singleton(SpecialSourceService::class);
+        $this->app->singleton(DocumentArchiveTranscriptReader::class);
+        $this->app->singleton(DocumentArchiveSearchService::class);
 
         $this->app->alias(ManifestServiceImplementation::class, ManifestService::class);
         $this->app->alias(TranscriptServiceImplementation::class, TranscriptService::class);
