@@ -18,7 +18,9 @@ jobs:
       - name: Clone path dependencies
         shell: bash
         run: |
-          git clone --depth 1 https://github.com/miguelenes/laravel-vector-search.git "$(dirname "$GITHUB_WORKSPACE")/laravel-vector-search"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git clone --depth 1 "https://x-access-token:${GITHUB_TOKEN}@github.com/miguelenes/laravel-vector-search.git" "$(dirname "$GITHUB_WORKSPACE")/laravel-vector-search"
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
