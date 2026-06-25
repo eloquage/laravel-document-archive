@@ -1,0 +1,21 @@
+{
+    "files": {
+        "PSP_Diligencia_16-10-2025.pdf": {
+            "source_file": "PSP_Diligencia_16-10-2025.pdf",
+            "canonical_basename": "2023-03-13-479-26-0T9MTS-AUTO-DE-DECLARACOES-6",
+            "status": "success",
+            "document_date": "2023-03-13",
+            "outputs": [
+                "2023-03-13-479-26-0T9MTS-AUTO-DE-DECLARACOES-6.pdf",
+                "2023-03-13-479-26-0T9MTS-AUTO-DE-DECLARACOES-6-PT.md",
+                "2023-03-13-479-26-0T9MTS-AUTO-DE-DECLARACOES-6-EN.md"
+            ]
+        },
+        "WHATSAPP-CHAT-MIMI-MORTICIA.txt": {
+            "source_file": "WHATSAPP-CHAT-MIMI-MORTICIA.txt",
+            "canonical_basename": "0000-00-00-479-26-0T9MTS-WHATSAPP-CHAT-MIMI-MORTICIA",
+            "status": "renamed",
+            "document_date": "0000-00-00"
+        }
+    }
+}
