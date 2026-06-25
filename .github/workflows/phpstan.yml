@@ -12,14 +12,18 @@ jobs:
     name: phpstan
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      APP_ENV: testing
+      OPENAI_API_KEY: sk-test
+      MEILISEARCH_HOST: http://localhost:7700
     steps:
       - uses: actions/checkout@v6
 
       - name: Clone path dependencies
         shell: bash
-        run: |
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${ secrets.GITHUB_TOKEN }
+        run: |
           git clone --depth 1 "https://x-access-token:${GITHUB_TOKEN}@github.com/miguelenes/laravel-vector-search.git" "$(dirname "$GITHUB_WORKSPACE")/laravel-vector-search"
 
       - name: Setup PHP
