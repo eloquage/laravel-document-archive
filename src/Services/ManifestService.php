@@ -7,6 +7,7 @@ namespace Eloquage\LaravelDocumentArchive\Services;
 use Eloquage\LaravelDocumentArchive\Contracts\ManifestService as ManifestServiceContract;
 use Eloquage\LaravelDocumentArchive\Data\ManifestEntry;
 use Eloquage\LaravelDocumentArchive\Enums\DocumentStatus;
+use Eloquage\LaravelDocumentArchive\Events\ManifestEntryUpdated;
 use Eloquage\LaravelDocumentArchive\Exceptions\ManifestNotFoundException;
 use Eloquage\LaravelDocumentArchive\Support\DocumentPathResolver;
 use Illuminate\Support\Facades\Storage;
@@ -189,6 +190,22 @@ class ManifestService implements ManifestServiceContract
         }
 
         $this->writeEntries($collection, $entries);
+
+        $updatedEntry = ['canonical_basename' => $basename, 'status' => $status->value];
+
+        foreach ($entries as $entry) {
+            if (! is_array($entry)) {
+                continue;
+            }
+
+            if (($entry['canonical_basename'] ?? null) === $basename) {
+                $updatedEntry = $entry;
+
+                break;
+            }
+        }
+
+        event(new ManifestEntryUpdated($collection, $basename, $updatedEntry));
     }
 
     /**
@@ -248,6 +265,8 @@ class ManifestService implements ManifestServiceContract
 
         /** @var array<string, array<string, mixed>> $entries */
         $this->writeEntries($collection, $entries);
+
+        event(new ManifestEntryUpdated($collection, $basename, $entries[$key] ?? []));
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Eloquage\LaravelDocumentArchive\Services;
 
 use Eloquage\LaravelDocumentArchive\Contracts\TranscriptService as TranscriptServiceContract;
+use Eloquage\LaravelDocumentArchive\Events\TranscriptWritten;
 use Eloquage\LaravelDocumentArchive\Exceptions\TranscriptNotFoundException;
 use Eloquage\LaravelDocumentArchive\Support\DocumentPathResolver;
 use Eloquage\LaravelDocumentArchive\Support\Utf8Text;
@@ -56,5 +57,7 @@ class TranscriptService implements TranscriptServiceContract
 
         Storage::disk($diskName)->makeDirectory($collection);
         Storage::disk($diskName)->put($relative, $content);
+
+        event(new TranscriptWritten($collection, $canonicalBasename, $language));
     }
 }

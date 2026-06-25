@@ -81,6 +81,11 @@ return [
         'skip_status' => ['renamed'],
     ],
 
+    'search' => [
+        'default_limit' => (int) env('DOCUMENT_ARCHIVE_SEARCH_LIMIT', 10),
+        'min_similarity' => (float) env('DOCUMENT_ARCHIVE_SEARCH_MIN_SIMILARITY', 0.3),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
