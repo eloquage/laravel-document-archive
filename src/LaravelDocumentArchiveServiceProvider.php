@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Eloquage\LaravelDocumentArchive;
 
 use Eloquage\LaravelDocumentArchive\Contracts\DocumentArchiveSearchContract;
+use Eloquage\LaravelDocumentArchive\Contracts\EvidenceSearchContract;
 use Eloquage\LaravelDocumentArchive\Contracts\ManifestService;
 use Eloquage\LaravelDocumentArchive\Contracts\SourceFileLocator;
 use Eloquage\LaravelDocumentArchive\Contracts\TranscriptService;
 use Eloquage\LaravelDocumentArchive\Services\ArchivePipelineService;
+use Eloquage\LaravelDocumentArchive\Services\DocumentArchiveEvidenceSearchService;
 use Eloquage\LaravelDocumentArchive\Services\DocumentArchiveTranscriptReader;
 use Eloquage\LaravelDocumentArchive\Services\ManifestService as ManifestServiceImplementation;
 use Eloquage\LaravelDocumentArchive\Services\NullDocumentArchiveSearchService;
@@ -40,6 +42,9 @@ class LaravelDocumentArchiveServiceProvider extends PackageServiceProvider
         $this->app->singleton(ArchivePipelineService::class);
         $this->app->singleton(SpecialSourceService::class);
         $this->app->singleton(DocumentArchiveTranscriptReader::class);
+        $this->app->singleton(DocumentArchiveEvidenceSearchService::class);
+
+        $this->app->alias(DocumentArchiveEvidenceSearchService::class, EvidenceSearchContract::class);
 
         $this->app->singleton(NullDocumentArchiveSearchService::class);
         $this->app->alias(NullDocumentArchiveSearchService::class, DocumentArchiveSearchContract::class);

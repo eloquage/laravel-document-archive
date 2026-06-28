@@ -22,12 +22,12 @@
         "illuminate/contracts": "^11.0||^12.0||^13.0",
         "illuminate/filesystem": "^11.0||^12.0||^13.0",
         "illuminate/support": "^11.0||^12.0||^13.0",
+        "spatie/laravel-data": "^4.0",
         "spatie/laravel-package-tools": "^1.16"
     },
     "suggest": {
         "eloquage/laravel-document-archive-vector": "Semantic and fulltext search over document archive transcripts.",
-        "eloquage/laravel-vector-search": "Required by laravel-document-archive-vector for embeddings and indexing.",
-        "spatie/laravel-data": "Optional typed manifest DTOs with validation attributes."
+        "eloquage/laravel-vector-search": "Required by laravel-document-archive-vector for embeddings and indexing."
     },
     "require-dev": {
         "laravel/pint": "^1.14",
