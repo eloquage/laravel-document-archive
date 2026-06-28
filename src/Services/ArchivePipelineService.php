@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Eloquage\LaravelDocumentArchive\Services;
 
+use Eloquage\LaravelDocumentArchive\Data\ArchiveContext;
 use Eloquage\LaravelDocumentArchive\Data\IngestResult;
 use Eloquage\LaravelDocumentArchive\Data\ValidationReport;
 use Eloquage\LaravelDocumentArchive\Enums\DocumentStatus;
 use Eloquage\LaravelDocumentArchive\Events\MissingTranscriptDetected;
 use Eloquage\LaravelDocumentArchive\Support\DocumentPathResolver;
+use Eloquage\LaravelDocumentArchive\Support\SafePathSegment;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
@@ -82,7 +84,7 @@ class ArchivePipelineService
 
         foreach ($collections as $collectionName) {
             try {
-                $entries = $this->manifestService->search($collectionName, '', limit: 10000);
+                $entries = $this->manifestService->allEntries($collectionName);
             } catch (Throwable $exception) {
                 $issues[] = [
                     'collection' => $collectionName,
@@ -94,10 +96,26 @@ class ArchivePipelineService
             }
 
             foreach ($entries as $entry) {
+                if (! is_array($entry)) {
+                    $issues[] = [
+                        'collection' => $collectionName,
+                        'type' => 'invalid_manifest_entry',
+                        'detail' => 'Manifest entry is not an object.',
+                    ];
+
+                    continue;
+                }
+
                 $basename = $entry['canonical_basename'] ?? null;
                 $status = (string) ($entry['status'] ?? '');
 
                 if (! is_string($basename)) {
+                    $issues[] = [
+                        'collection' => $collectionName,
+                        'type' => 'invalid_manifest_entry',
+                        'detail' => 'Manifest entry is missing canonical_basename.',
+                    ];
+
                     continue;
                 }
 
@@ -112,6 +130,10 @@ class ArchivePipelineService
                     continue;
                 }
 
+                $sourceFile = (string) ($entry['source_file'] ?? '');
+                $missingLanguages = [];
+                $firstExpectedPath = null;
+
                 foreach ($languages as $language) {
                     if (! is_string($language)) {
                         continue;
@@ -124,9 +146,10 @@ class ArchivePipelineService
                         continue;
                     }
 
-                    $sourceFile = (string) ($entry['source_file'] ?? '');
+                    $missingLanguages[] = $language;
+                    $firstExpectedPath ??= "{$disk}:{$relative}";
 
-                    $issue = [
+                    $issues[] = [
                         'collection' => $collectionName,
                         'type' => 'missing_transcript',
                         'canonical_basename' => $basename,
@@ -134,20 +157,44 @@ class ArchivePipelineService
                         'expected_path' => "{$disk}:{$relative}",
                         'source_file' => $sourceFile,
                     ];
+                }
 
-                    if ($fix && $sourceFile !== '') {
-                        event(new MissingTranscriptDetected(
-                            collection: $collectionName,
-                            canonicalBasename: $basename,
-                            language: $language,
-                            sourceFile: $sourceFile,
-                            expectedPath: "{$disk}:{$relative}",
-                        ));
-                        $fixesApplied++;
-                        $issue['fix_action'] = 'event_dispatched';
+                if ($sourceFile === '') {
+                    $issues[] = [
+                        'collection' => $collectionName,
+                        'type' => 'missing_source_file',
+                        'canonical_basename' => $basename,
+                        'detail' => 'Manifest entry has no source_file; cannot auto-fix.',
+                    ];
+
+                    continue;
+                }
+
+                if ($fix && $missingLanguages !== [] && $firstExpectedPath !== null) {
+                    $context = new ArchiveContext(
+                        collection: $collectionName,
+                        canonicalBasename: $basename,
+                        sourceFile: $sourceFile,
+                        language: null,
+                    );
+
+                    event(new MissingTranscriptDetected(
+                        collection: $collectionName,
+                        canonicalBasename: $basename,
+                        language: null,
+                        sourceFile: $sourceFile,
+                        expectedPath: $firstExpectedPath,
+                        context: $context,
+                    ));
+                    $fixesApplied++;
+
+                    foreach ($issues as &$issue) {
+                        if (($issue['canonical_basename'] ?? null) === $basename
+                            && ($issue['type'] ?? null) === 'missing_transcript') {
+                            $issue['fix_action'] = 'event_dispatched';
+                        }
                     }
-
-                    $issues[] = $issue;
+                    unset($issue);
                 }
             }
         }
@@ -200,6 +247,12 @@ class ArchivePipelineService
     {
         $parts = explode('/', $path);
         $sourceFile = basename($path);
+
+        try {
+            $sourceFile = SafePathSegment::assert($sourceFile, 'intake source file');
+        } catch (Throwable) {
+            return null;
+        }
 
         if (count($parts) > 1 && in_array($parts[0], $this->pathResolver->collections(), true)) {
             $collection = $parts[0];

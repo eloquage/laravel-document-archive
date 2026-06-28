@@ -16,6 +16,7 @@ use Eloquage\LaravelDocumentArchive\Services\SourceFileLocator as SourceFileLoca
 use Eloquage\LaravelDocumentArchive\Services\SpecialSourceService;
 use Eloquage\LaravelDocumentArchive\Services\TranscriptService as TranscriptServiceImplementation;
 use Eloquage\LaravelDocumentArchive\Support\DocumentPathResolver;
+use Eloquage\LaravelDocumentArchive\Support\ManifestSchemaValidator;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -31,6 +32,7 @@ class LaravelDocumentArchiveServiceProvider extends PackageServiceProvider
     public function packageRegistered(): void
     {
         $this->app->singleton(DocumentPathResolver::class);
+        $this->app->singleton(ManifestSchemaValidator::class);
 
         $this->app->singleton(ManifestServiceImplementation::class);
         $this->app->singleton(TranscriptServiceImplementation::class);

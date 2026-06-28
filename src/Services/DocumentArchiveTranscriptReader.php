@@ -8,6 +8,7 @@ use Eloquage\LaravelDocumentArchive\Contracts\ManifestService;
 use Eloquage\LaravelDocumentArchive\Contracts\TranscriptService;
 use Eloquage\LaravelDocumentArchive\Exceptions\TranscriptNotFoundException;
 use Eloquage\LaravelDocumentArchive\Support\DocumentPathResolver;
+use Eloquage\LaravelDocumentArchive\Support\SafePathSegment;
 use Throwable;
 
 class DocumentArchiveTranscriptReader
@@ -27,6 +28,12 @@ class DocumentArchiveTranscriptReader
         ?int $startLine = null,
         ?int $maxChars = null,
     ): array {
+        try {
+            $canonicalBasename = SafePathSegment::assertBasename($canonicalBasename);
+        } catch (Throwable $exception) {
+            return ['success' => false, 'error' => $exception->getMessage()];
+        }
+
         $collection = $this->resolveCollectionForBasename($canonicalBasename);
 
         if ($collection === null) {
@@ -44,8 +51,8 @@ class DocumentArchiveTranscriptReader
             $content = implode("\n", array_slice($lines, $startLine - 1));
         }
 
-        if ($maxChars !== null && strlen($content) > $maxChars) {
-            $content = substr($content, 0, $maxChars)."\n\n[truncated]";
+        if ($maxChars !== null && mb_strlen($content) > $maxChars) {
+            $content = mb_substr($content, 0, $maxChars)."\n\n[truncated]";
         }
 
         $disk = $this->pathResolver->transcriptDiskName($collection, $canonicalBasename, $language);

@@ -3,8 +3,10 @@
 use Eloquage\LaravelDocumentArchive\Contracts\ManifestService;
 use Eloquage\LaravelDocumentArchive\Contracts\SourceFileLocator;
 use Eloquage\LaravelDocumentArchive\Contracts\TranscriptService;
+use Eloquage\LaravelDocumentArchive\Events\TranscriptWritten;
 use Eloquage\LaravelDocumentArchive\Exceptions\TranscriptNotFoundException;
 use Eloquage\LaravelDocumentArchive\Services\SpecialSourceService;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -24,6 +26,21 @@ it('writes pt transcript to collections disk', function () {
         ->and(Storage::disk('collections')->get("{$collection}/{$basename}-PT.md"))->toBe('Texto português.');
 });
 
+it('dispatches transcript written event on write', function () {
+    Event::fake([TranscriptWritten::class]);
+
+    $collection = '479-26-0T9MTS';
+    $basename = '0000-00-00-479-26-0T9MTS-NOTES';
+
+    app(TranscriptService::class)->write($collection, $basename, 'en', 'English text.');
+
+    Event::assertDispatched(TranscriptWritten::class, function (TranscriptWritten $event) use ($collection, $basename): bool {
+        return $event->context->collection === $collection
+            && $event->context->canonicalBasename === $basename
+            && $event->language === 'en';
+    });
+});
+
 it('reads transcript from collections disk', function () {
     $collection = '479-26-0T9MTS';
     $basename = '0000-00-00-479-26-0T9MTS-NOTES';
@@ -31,6 +48,12 @@ it('reads transcript from collections disk', function () {
     app(TranscriptService::class)->write($collection, $basename, 'en', 'English text.');
 
     expect(app(TranscriptService::class)->read($collection, $basename, 'en'))->toBe('English text.');
+});
+
+it('rejects path traversal when locating source files', function () {
+    expect(fn () => app(SourceFileLocator::class)
+        ->locate('479-26-0T9MTS', '../outside.pdf'))
+        ->toThrow(InvalidArgumentException::class);
 });
 
 it('throws when transcript is missing', function () {

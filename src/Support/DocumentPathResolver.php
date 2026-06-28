@@ -44,6 +44,8 @@ class DocumentPathResolver
 
     public function validateCollection(string $collection): void
     {
+        SafePathSegment::assertCollectionKey($collection);
+
         if (! in_array($collection, $this->collections(), true)) {
             throw new CollectionNotConfiguredException("Unknown collection: {$collection}");
         }
@@ -120,6 +122,7 @@ class DocumentPathResolver
     public function transcriptRelativePath(string $collection, string $canonicalBasename, string $language): string
     {
         $this->validateCollection($collection);
+        $canonicalBasename = SafePathSegment::assertBasename($canonicalBasename);
 
         $suffixes = config('document-archive.suffixes', []);
         $suffix = is_array($suffixes) ? ($suffixes[strtolower($language)] ?? null) : null;
@@ -138,6 +141,26 @@ class DocumentPathResolver
         $prefix = is_string($prefix) ? $prefix : 'denuncia-v1';
 
         return "{$prefix}/{$collection}/{$filename}";
+    }
+
+    public function transcriptWriteRelativePath(string $collection, string $canonicalBasename, string $language): string
+    {
+        $this->validateCollection($collection);
+        $canonicalBasename = SafePathSegment::assertBasename($canonicalBasename);
+
+        $suffixes = config('document-archive.suffixes', []);
+        $suffix = is_array($suffixes) ? ($suffixes[strtolower($language)] ?? null) : null;
+
+        if (! is_string($suffix) || $suffix === '') {
+            throw new InvalidArgumentException("Unsupported language: {$language}");
+        }
+
+        return "{$collection}/{$canonicalBasename}{$suffix}";
+    }
+
+    public function transcriptWriteDiskName(): string
+    {
+        return $this->diskName('collections', 'cases');
     }
 
     public function transcriptDiskName(string $collection, string $canonicalBasename, string $language): string

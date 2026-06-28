@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Eloquage\LaravelDocumentArchive\Services;
 
 use Eloquage\LaravelDocumentArchive\Support\DocumentPathResolver;
+use Eloquage\LaravelDocumentArchive\Support\SafePathSegment;
+use Eloquage\LaravelDocumentArchive\Support\Utf8Text;
 use Illuminate\Support\Facades\Storage;
 
 class SpecialSourceService
@@ -25,6 +27,11 @@ class SpecialSourceService
         int $limit = 50,
     ): array {
         $this->pathResolver->validateCollection($collection);
+
+        if ($canonicalBasename !== null) {
+            SafePathSegment::assertBasename($canonicalBasename);
+        }
+
         $prefix = config('document-archive.legacy_prefix', 'denuncia-v1');
         $prefix = is_string($prefix) ? $prefix : 'denuncia-v1';
         $directory = "{$prefix}/{$collection}";
@@ -50,7 +57,7 @@ class SpecialSourceService
                 continue;
             }
 
-            $content = Storage::disk($legacyDisk)->get($file);
+            $content = Utf8Text::sanitize((string) Storage::disk($legacyDisk)->get($file));
             $lines = $this->filterLines($content, $date, $query);
 
             if ($lines === []) {
@@ -98,7 +105,7 @@ class SpecialSourceService
             return ['success' => false, 'error' => "Facebook HTML export not found: {$relative}"];
         }
 
-        $content = Storage::disk($legacyDisk)->get($relative);
+        $content = Utf8Text::sanitize((string) Storage::disk($legacyDisk)->get($relative));
         $messages = $this->extractFacebookMessages($content, $dateFrom, $dateTo, $participant, $query, $limit);
 
         if ($messages === []) {
@@ -148,7 +155,7 @@ class SpecialSourceService
     ): array {
         $messages = [];
 
-        if (preg_match_all('/<div class="[^"]*message[^"]*"[^>]*>(.*?)<\/div>/is', $html, $matches)) {
+        if (preg_match_all('/<div class="[^"]*message[^"]*"[^>]*>(.*?)<\/div>/is', $html, $matches) !== false) {
             foreach ($matches[1] as $block) {
                 $text = trim(html_entity_decode(strip_tags($block)));
 

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Eloquage\LaravelDocumentArchive\Services;
 
 use Eloquage\LaravelDocumentArchive\Contracts\TranscriptService as TranscriptServiceContract;
+use Eloquage\LaravelDocumentArchive\Data\ArchiveContext;
 use Eloquage\LaravelDocumentArchive\Events\TranscriptWritten;
 use Eloquage\LaravelDocumentArchive\Exceptions\TranscriptNotFoundException;
 use Eloquage\LaravelDocumentArchive\Support\DocumentPathResolver;
+use Eloquage\LaravelDocumentArchive\Support\SafePathSegment;
 use Eloquage\LaravelDocumentArchive\Support\Utf8Text;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
@@ -21,6 +23,7 @@ class TranscriptService implements TranscriptServiceContract
     public function read(string $collection, string $basename, string $language): string
     {
         $this->pathResolver->validateCollection($collection);
+        $basename = SafePathSegment::assertBasename($basename);
 
         $language = strtolower($language);
         $disk = $this->pathResolver->transcriptDiskName($collection, $basename, $language);
@@ -40,6 +43,7 @@ class TranscriptService implements TranscriptServiceContract
         string $content,
     ): void {
         $this->pathResolver->validateCollection($collection);
+        $canonicalBasename = SafePathSegment::assertBasename($canonicalBasename);
 
         $language = strtolower($language);
         $suffixes = config('document-archive.suffixes', []);
@@ -49,15 +53,24 @@ class TranscriptService implements TranscriptServiceContract
             throw new InvalidArgumentException("Unsupported language: {$language}");
         }
 
-        $disk = config('document-archive.disks.collections', 'cases');
-        $diskName = is_string($disk) ? $disk : 'cases';
-        $relative = "{$collection}/{$canonicalBasename}{$suffix}";
+        $disk = $this->pathResolver->transcriptWriteDiskName();
+        $relative = $this->pathResolver->transcriptWriteRelativePath($collection, $canonicalBasename, $language);
 
         $content = Utf8Text::sanitize($content);
 
-        Storage::disk($diskName)->makeDirectory($collection);
-        Storage::disk($diskName)->put($relative, $content);
+        $directory = dirname($relative);
+        if ($directory !== '.' && $directory !== '') {
+            Storage::disk($disk)->makeDirectory($directory);
+        }
 
-        event(new TranscriptWritten($collection, $canonicalBasename, $language));
+        Storage::disk($disk)->put($relative, $content);
+
+        $context = new ArchiveContext(
+            collection: $collection,
+            canonicalBasename: $canonicalBasename,
+            language: $language,
+        );
+
+        event(new TranscriptWritten($collection, $canonicalBasename, $language, $context));
     }
 }

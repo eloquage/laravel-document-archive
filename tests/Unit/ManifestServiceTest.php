@@ -3,7 +3,6 @@
 use Eloquage\LaravelDocumentArchive\Data\ManifestEntry;
 use Eloquage\LaravelDocumentArchive\Enums\DocumentStatus;
 use Eloquage\LaravelDocumentArchive\Services\ManifestService;
-use Eloquage\LaravelDocumentArchive\Support\DocumentPathResolver;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -15,7 +14,7 @@ beforeEach(function () {
 });
 
 it('looks up manifest entry by source file', function () {
-    $service = new ManifestService(new DocumentPathResolver);
+    $service = app(ManifestService::class);
 
     $entry = $service->lookup('479-26-0T9MTS', sourceFile: 'PSP_Diligencia_16-10-2025.pdf');
 
@@ -24,7 +23,7 @@ it('looks up manifest entry by source file', function () {
 });
 
 it('searches manifest by query substring', function () {
-    $service = new ManifestService(new DocumentPathResolver);
+    $service = app(ManifestService::class);
 
     $results = $service->search('479-26-0T9MTS', 'whatsapp');
 
@@ -33,7 +32,7 @@ it('searches manifest by query substring', function () {
 });
 
 it('adds a manifest entry', function () {
-    $service = new ManifestService(new DocumentPathResolver);
+    $service = app(ManifestService::class);
 
     $service->addEntry('479-26-0T9MTS', new ManifestEntry(
         sourceFile: 'new-file.pdf',
@@ -48,7 +47,7 @@ it('adds a manifest entry', function () {
 });
 
 it('updates manifest entry status by basename', function () {
-    $service = new ManifestService(new DocumentPathResolver);
+    $service = app(ManifestService::class);
 
     $service->updateStatus(
         '479-26-0T9MTS',

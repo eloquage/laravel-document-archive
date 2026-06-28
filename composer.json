@@ -26,7 +26,8 @@
     },
     "suggest": {
         "eloquage/laravel-document-archive-vector": "Semantic and fulltext search over document archive transcripts.",
-        "eloquage/laravel-vector-search": "Required by laravel-document-archive-vector for embeddings and indexing."
+        "eloquage/laravel-vector-search": "Required by laravel-document-archive-vector for embeddings and indexing.",
+        "spatie/laravel-data": "Optional typed manifest DTOs with validation attributes."
     },
     "require-dev": {
         "laravel/pint": "^1.14",

@@ -10,6 +10,8 @@ use Eloquage\LaravelDocumentArchive\Enums\DocumentStatus;
 use Eloquage\LaravelDocumentArchive\Events\ManifestEntryUpdated;
 use Eloquage\LaravelDocumentArchive\Exceptions\ManifestNotFoundException;
 use Eloquage\LaravelDocumentArchive\Support\DocumentPathResolver;
+use Eloquage\LaravelDocumentArchive\Support\ManifestSchemaValidator;
+use Eloquage\LaravelDocumentArchive\Support\SafePathSegment;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
 
@@ -20,6 +22,7 @@ class ManifestService implements ManifestServiceContract
 
     public function __construct(
         private DocumentPathResolver $pathResolver,
+        private ManifestSchemaValidator $schemaValidator,
     ) {}
 
     /**
@@ -137,8 +140,12 @@ class ManifestService implements ManifestServiceContract
             throw new InvalidArgumentException("Unexpected manifest structure for collection {$collection}");
         }
 
-        /** @var array<string, mixed> $files */
-        return $this->cache[$collection] = $files;
+        $validated = $this->schemaValidator->validateFiles($files);
+
+        /** @var array<string, mixed> $validFiles */
+        $validFiles = $validated['valid'];
+
+        return $this->cache[$collection] = $validFiles;
     }
 
     public function hasSourceFile(string $collection, string $sourceFile): bool
@@ -160,6 +167,9 @@ class ManifestService implements ManifestServiceContract
 
     public function addEntry(string $collection, ManifestEntry $entry): void
     {
+        SafePathSegment::assert($entry->sourceFile, 'source file');
+        SafePathSegment::assertBasename($entry->canonicalBasename);
+
         $entries = $this->allEntries($collection);
         $entries[$entry->sourceFile] = $entry->toArray();
         $this->writeEntries($collection, $entries);
@@ -213,6 +223,8 @@ class ManifestService implements ManifestServiceContract
      */
     public function buildPendingEntry(string $collection, string $sourceFile): array
     {
+        $sourceFile = SafePathSegment::assert($sourceFile, 'source file');
+
         $basename = pathinfo($sourceFile, PATHINFO_FILENAME);
         $slug = strtoupper(preg_replace('/[^A-Za-z0-9]+/', '-', $basename) ?? 'INTAKE');
         $slug = trim($slug, '-');
@@ -275,6 +287,19 @@ class ManifestService implements ManifestServiceContract
     public function writeEntries(string $collection, array $files): void
     {
         $this->pathResolver->validateCollection($collection);
+
+        $validated = $this->schemaValidator->validateFiles($files);
+
+        if ($validated['invalid'] !== []) {
+            $first = $validated['invalid'][0];
+            $message = implode('; ', $first['errors']);
+
+            throw new InvalidArgumentException("Invalid manifest entry '{$first['key']}': {$message}");
+        }
+
+        /** @var array<string, array<string, mixed>> $files */
+        $files = $validated['valid'];
+
         $disk = $this->pathResolver->manifestDiskName($collection);
         $relative = $this->pathResolver->manifestRelativePath($collection);
 
