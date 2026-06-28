@@ -20,12 +20,14 @@ class MissingTranscriptDetected
         public string $sourceFile,
         public string $expectedPath,
         ?ArchiveContext $context = null,
+        public ?string $tier = null,
     ) {
         $this->context = $context ?? new ArchiveContext(
             collection: $collection,
             canonicalBasename: $canonicalBasename,
             sourceFile: $sourceFile,
             language: $language,
+            tier: $tier,
         );
     }
 }

@@ -171,11 +171,15 @@ class ArchivePipelineService
                 }
 
                 if ($fix && $missingLanguages !== [] && $firstExpectedPath !== null) {
+                    $tier = config('document-processing.default_auto_tier');
+                    $tier = is_string($tier) ? $tier : null;
+
                     $context = new ArchiveContext(
                         collection: $collectionName,
                         canonicalBasename: $basename,
                         sourceFile: $sourceFile,
                         language: null,
+                        tier: $tier,
                     );
 
                     event(new MissingTranscriptDetected(
@@ -185,6 +189,7 @@ class ArchivePipelineService
                         sourceFile: $sourceFile,
                         expectedPath: $firstExpectedPath,
                         context: $context,
+                        tier: $tier,
                     ));
                     $fixesApplied++;
 

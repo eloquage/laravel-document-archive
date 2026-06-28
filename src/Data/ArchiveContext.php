@@ -11,6 +11,7 @@ readonly class ArchiveContext
         public ?string $canonicalBasename = null,
         public ?string $sourceFile = null,
         public ?string $language = null,
+        public ?string $tier = null,
     ) {}
 
     public static function forCollection(string $collection): self
@@ -25,6 +26,7 @@ readonly class ArchiveContext
             canonicalBasename: $canonicalBasename,
             sourceFile: $this->sourceFile,
             language: $this->language,
+            tier: $this->tier,
         );
     }
 
@@ -35,6 +37,7 @@ readonly class ArchiveContext
             canonicalBasename: $this->canonicalBasename,
             sourceFile: $sourceFile,
             language: $this->language,
+            tier: $this->tier,
         );
     }
 
@@ -45,6 +48,18 @@ readonly class ArchiveContext
             canonicalBasename: $this->canonicalBasename,
             sourceFile: $this->sourceFile,
             language: $language,
+            tier: $this->tier,
+        );
+    }
+
+    public function withTier(?string $tier): self
+    {
+        return new self(
+            collection: $this->collection,
+            canonicalBasename: $this->canonicalBasename,
+            sourceFile: $this->sourceFile,
+            language: $this->language,
+            tier: $tier,
         );
     }
 }
