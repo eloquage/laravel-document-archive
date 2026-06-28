@@ -37,12 +37,15 @@ class ArchivePipelineService
         $candidates = $this->listIntakeCandidates($collection);
         $newFiles = [];
         $registered = [];
+        $skippedExisting = 0;
 
         foreach ($candidates as $candidate) {
             $collectionName = $candidate['collection'];
             $sourceFile = $candidate['source_file'];
 
             if ($this->manifestService->hasSourceFile($collectionName, $sourceFile)) {
+                $skippedExisting++;
+
                 continue;
             }
 
@@ -71,6 +74,8 @@ class ArchivePipelineService
                     ? 'Registered '.count($registered).' file(s) in manifest.'
                     : 'No new files to register.'),
             capabilities: $this->capabilities(),
+            candidatesScanned: count($candidates),
+            skippedExisting: $skippedExisting,
         );
     }
 

@@ -19,6 +19,8 @@ class IngestResult
         public array $registered,
         public string $message,
         public array $capabilities,
+        public int $candidatesScanned = 0,
+        public int $skippedExisting = 0,
     ) {}
 
     /**
@@ -32,6 +34,9 @@ class IngestResult
             'count' => $this->count,
             'new_files' => $this->newFiles,
             'registered' => $this->registered,
+            'registered_count' => count($this->registered),
+            'candidates_scanned' => $this->candidatesScanned,
+            'skipped_existing' => $this->skippedExisting,
             'message' => $this->message,
             'capabilities' => $this->capabilities,
         ];
