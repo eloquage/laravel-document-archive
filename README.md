@@ -27,7 +27,7 @@ composer require eloquage/laravel-document-archive
 Publish configuration:
 
 ```bash
-php artisan vendor:publish --tag=laravel-document-archive-config
+php artisan vendor:publish --tag=document-archive-config
 ```
 
 Merge the disk stub from `config/document-archive-disks.php` into `config/filesystems.php`.
