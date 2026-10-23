@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Merge these disk definitions into your application's config/filesystems.php.
  *
- * php artisan vendor:publish --tag=laravel-document-archive-config
+ * php artisan vendor:publish --tag=document-archive-config
  */
 return [
 
