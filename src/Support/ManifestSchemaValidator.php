@@ -64,7 +64,7 @@ class ManifestSchemaValidator
     }
 
     /**
-     * @param  array<string, mixed>  $files
+     * @param  array<array-key, mixed>  $files
      * @return array{valid: array<string, array<string, mixed>>, invalid: list<array{key: string, errors: list<string>}>}
      */
     public function validateFiles(array $files): array
@@ -74,6 +74,11 @@ class ManifestSchemaValidator
 
         foreach ($files as $key => $entry) {
             if (! is_string($key)) {
+                $invalid[] = [
+                    'key' => (string) $key,
+                    'errors' => ['Manifest keys must be strings.'],
+                ];
+
                 continue;
             }
 

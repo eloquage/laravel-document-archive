@@ -44,3 +44,18 @@ it('rejects entries with invalid status', function () {
 
     expect($errors)->not->toBeEmpty();
 });
+
+it('reports numeric manifest keys instead of silently skipping them', function () {
+    $result = (new ManifestSchemaValidator)->validateFiles([
+        0 => [
+            'source_file' => 'scan.pdf',
+            'canonical_basename' => '2023-03-13-479-26-0T9MTS-SCAN',
+            'status' => 'pending',
+        ],
+    ]);
+
+    expect($result['valid'])->toBe([])
+        ->and($result['invalid'])->toBe([
+            ['key' => '0', 'errors' => ['Manifest keys must be strings.']],
+        ]);
+});
