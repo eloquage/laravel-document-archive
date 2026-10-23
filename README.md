@@ -1,6 +1,13 @@
+<p align="center"><img src="art/banner.png" alt="Laravel Document Archive" width="100%"></p>
+
 # Laravel Document Archive
 
-Filesystem document archive with JSON manifest, bilingual transcripts, ingest/validate pipeline, and special-source readers (WhatsApp/Facebook).
+[![Tests](https://github.com/eloquage/laravel-document-archive/actions/workflows/run-tests.yml/badge.svg)](https://github.com/eloquage/laravel-document-archive/actions/workflows/run-tests.yml)
+[![License](https://img.shields.io/github/license/eloquage/laravel-document-archive)](LICENSE)
+
+A Laravel package for archiving source files, validating JSON manifests, and reading bilingual transcripts. Ingesting files is idempotent; AI, OCR, search, and MCP tools are separate packages.
+
+**Requirements:** PHP 8.4+ and Laravel 11, 12, or 13.
 
 This package handles **storage and manifest I/O only**. It does not include AI, OCR, vector search, or MCP. Pair with:
 
@@ -24,6 +31,39 @@ php artisan vendor:publish --tag=laravel-document-archive-config
 ```
 
 Merge the disk stub from `config/document-archive-disks.php` into `config/filesystems.php`.
+
+## Quick start
+
+Register a collection in `config/document-archive.php`:
+
+```php
+return [
+    'cases' => [
+        '479-26-0T9MTS' => [
+            'nuipc' => '479/26.0T9MTS',
+            'label' => 'Counter-complaint',
+        ],
+    ],
+];
+```
+
+Place new files under the configured intake disk, then run an ingest and read the resulting manifest/transcript:
+
+```php
+use Eloquage\LaravelDocumentArchive\Services\ArchivePipelineService;
+use Eloquage\LaravelDocumentArchive\Contracts\ManifestService;
+use Eloquage\LaravelDocumentArchive\Contracts\TranscriptService;
+
+app(ArchivePipelineService::class)->ingest('479-26-0T9MTS');
+$entry = app(ManifestService::class)->lookup('479-26-0T9MTS', sourceFile: 'scan.pdf');
+$text = app(TranscriptService::class)->read(
+    '479-26-0T9MTS',
+    $entry['canonical_basename'],
+    'en',
+);
+```
+
+The package stores files and manifest data; it does not perform OCR or translation.
 
 ## Disk layout
 
@@ -76,7 +116,11 @@ Top-level shape:
 ```json
 {
   "files": {
-    "source-filename.pdf": { ...entry... }
+    "source-filename.pdf": {
+      "source_file": "source-filename.pdf",
+      "canonical_basename": "2025-01-01-collection-SCAN",
+      "status": "pending"
+    }
   }
 }
 ```
