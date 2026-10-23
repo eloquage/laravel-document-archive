@@ -42,6 +42,30 @@ it('registers new intake files in manifest on execute', function () {
     expect($manifest['files']['new-intake.pdf']['status'])->toBe('pending');
 });
 
+it('creates a manifest when ingesting the first intake for a collection', function () {
+    Storage::disk('intake')->put('384-22-0PIPRT/first-file.pdf', 'content');
+
+    $result = app(ArchivePipelineService::class)->ingest('384-22-0PIPRT', dryRun: false);
+
+    expect($result->registered)->toBe(['first-file.pdf']);
+
+    $manifest = json_decode(
+        Storage::disk('legacy')->get('denuncia-v1/384-22-0PIPRT/evidence_manifest.json'),
+        true,
+    );
+
+    expect($manifest['files']['first-file.pdf']['status'])->toBe('pending');
+});
+
+it('ignores intake files under unconfigured directories when filtering a collection', function () {
+    Storage::disk('intake')->put('unconfigured-collection/wrong-file.pdf', 'content');
+
+    $result = app(ArchivePipelineService::class)->ingest('384-22-0PIPRT', dryRun: false);
+
+    expect($result->candidatesScanned)->toBe(0)
+        ->and($result->registered)->toBe([]);
+});
+
 it('dispatches a single missing transcript event per manifest entry when validate fix is enabled', function () {
     Event::fake([MissingTranscriptDetected::class]);
 

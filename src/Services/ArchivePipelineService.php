@@ -9,6 +9,7 @@ use Eloquage\LaravelDocumentArchive\Data\IngestResult;
 use Eloquage\LaravelDocumentArchive\Data\ValidationReport;
 use Eloquage\LaravelDocumentArchive\Enums\DocumentStatus;
 use Eloquage\LaravelDocumentArchive\Events\MissingTranscriptDetected;
+use Eloquage\LaravelDocumentArchive\Exceptions\ManifestNotFoundException;
 use Eloquage\LaravelDocumentArchive\Support\DocumentPathResolver;
 use Eloquage\LaravelDocumentArchive\Support\SafePathSegment;
 use Illuminate\Support\Facades\Storage;
@@ -43,10 +44,17 @@ class ArchivePipelineService
             $collectionName = $candidate['collection'];
             $sourceFile = $candidate['source_file'];
 
-            if ($this->manifestService->hasSourceFile($collectionName, $sourceFile)) {
-                $skippedExisting++;
+            try {
+                if ($this->manifestService->hasSourceFile($collectionName, $sourceFile)) {
+                    $skippedExisting++;
 
-                continue;
+                    continue;
+                }
+
+                $entries = $this->manifestService->allEntries($collectionName);
+            } catch (ManifestNotFoundException) {
+                // The first intake for a configured collection has no manifest yet.
+                $entries = [];
             }
 
             $newFiles[] = $candidate['path'];
@@ -55,7 +63,6 @@ class ArchivePipelineService
                 continue;
             }
 
-            $entries = $this->manifestService->allEntries($collectionName);
             $entry = $this->manifestService->buildPendingEntry($collectionName, $sourceFile);
             $entries[$sourceFile] = $entry;
             $this->manifestService->writeEntries($collectionName, $entries);
@@ -264,8 +271,12 @@ class ArchivePipelineService
             return null;
         }
 
-        if (count($parts) > 1 && in_array($parts[0], $this->pathResolver->collections(), true)) {
+        if (count($parts) > 1) {
             $collection = $parts[0];
+
+            if (! in_array($collection, $this->pathResolver->collections(), true)) {
+                return null;
+            }
 
             if ($collectionFilter !== null && $collection !== $collectionFilter) {
                 return null;

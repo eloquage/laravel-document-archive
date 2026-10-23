@@ -17,7 +17,7 @@ return [
             'throw' => false,
         ],
 
-        'collections' => [
+        'cases' => [
             'driver' => 'local',
             'root' => storage_path('collections'),
             'throw' => false,
