@@ -22,7 +22,7 @@ class NullDocumentArchiveSearchService implements DocumentArchiveSearchContract
             'success' => true,
             'status' => 'skipped',
             'results' => [],
-            'error' => 'Vector search bridge not installed. Require eloquage/laravel-document-archive-vector.',
+            'error' => 'Search is not configured. Bind DocumentArchiveSearchContract to enable archive search.',
         ];
     }
 
@@ -35,7 +35,7 @@ class NullDocumentArchiveSearchService implements DocumentArchiveSearchContract
             'success' => true,
             'status' => 'skipped',
             'results' => [],
-            'error' => 'Vector search bridge not installed. Require eloquage/laravel-document-archive-vector.',
+            'error' => 'Search is not configured. Bind DocumentArchiveSearchContract to enable archive search.',
         ];
     }
 }

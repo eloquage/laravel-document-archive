@@ -9,14 +9,7 @@ A Laravel package for archiving source files, validating JSON manifests, and rea
 
 **Requirements:** PHP 8.4+ and Laravel 11, 12, or 13.
 
-This package handles **storage and manifest I/O only**. It does not include AI, OCR, vector search, or MCP. Pair with:
-
-| Package                                                                                                   | Purpose                         |
-| --------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| [`eloquage/laravel-document-processing`](https://github.com/eloquage/laravel-document-processing)         | OCR + translation pipeline      |
-| [`eloquage/laravel-document-archive-vector`](https://github.com/eloquage/laravel-document-archive-vector) | Semantic/fulltext search bridge |
-| [`eloquage/laravel-document-archive-mcp`](https://github.com/eloquage/laravel-document-archive-mcp)       | MCP tools for agents            |
-| [`eloquage/laravel-document-archive-ai`](https://github.com/eloquage/laravel-document-archive-ai)         | Laravel AI SDK agents/tools     |
+This package handles **storage and manifest I/O only**. AI, OCR, vector search, and MCP integrations are not included. You can connect them from your application through the package events and the optional search contract.
 
 ## Installation
 
@@ -228,31 +221,24 @@ use Eloquage\LaravelDocumentArchive\Events\MissingTranscriptDetected;
 
 Event::listen(MissingTranscriptDetected::class, function (MissingTranscriptDetected $event) {
     // $event->context->collection, ->sourceFile
-    // laravel-document-processing queues ProcessDocumentJob when installed
+    // An optional document-processing integration can queue work here.
 });
 ```
 
 ## Search (optional)
 
-Default binding is `NullDocumentArchiveSearchService` (returns `status: skipped`). Install `eloquage/laravel-document-archive-vector` to enable semantic search.
+Search is disabled by default. The package binds `NullDocumentArchiveSearchService`, which returns `status: skipped`. To enable search, bind an application service that implements `DocumentArchiveSearchContract`:
 
 ```php
+use Eloquage\LaravelDocumentArchive\Contracts\DocumentArchiveSearchContract;
 use Eloquage\LaravelDocumentArchive\Support\ArchiveCapabilities;
 
-ArchiveCapabilities::searchEnabled(); // true when vector bridge installed
+$this->app->bind(DocumentArchiveSearchContract::class, App\Search\ArchiveSearch::class);
+
+ArchiveCapabilities::searchEnabled(); // true after binding your search adapter
 ```
 
 Index name: `document-archive.vector_index` (default `document-archive`).
-
-## Integration map
-
-| Consumer                    | Uses                                                                                   |
-| --------------------------- | -------------------------------------------------------------------------------------- |
-| **processing**              | `MissingTranscriptDetected` → `ProcessDocumentJob` with `ArchiveContext`               |
-| **document-archive-mcp**    | 12 tools: manifest, transcript, search, pipeline, indexing                             |
-| **document-archive-ai**     | `CorrelationAgent`, `ManifestLookupTool`, `SimilaritySearchTool`, `ReadTranscriptTool` |
-| **document-archive-vector** | `TranscriptWritten` / `ManifestEntryUpdated` listeners, search contract                |
-| **notebooklm**              | Soft coupling: read transcripts via MCP, sync to NotebookLM via `notebooklm_sync`      |
 
 ## Third-party packages (optional)
 
