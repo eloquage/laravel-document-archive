@@ -26,8 +26,7 @@
         "spatie/laravel-package-tools": "^1.16"
     },
     "suggest": {
-        "eloquage/laravel-document-archive-vector": "Semantic and fulltext search over document archive transcripts.",
-        "eloquage/laravel-vector-search": "Required by laravel-document-archive-vector for embeddings and indexing."
+        "eloquage/laravel-vector-search": "Optional vector backend for an application-defined DocumentArchiveSearchContract adapter."
     },
     "require-dev": {
         "laravel/pint": "^1.14",
