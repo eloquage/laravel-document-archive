@@ -221,7 +221,7 @@ use Eloquage\LaravelDocumentArchive\Events\MissingTranscriptDetected;
 
 Event::listen(MissingTranscriptDetected::class, function (MissingTranscriptDetected $event) {
     // $event->context->collection, ->sourceFile
-    // laravel-document-processing queues ProcessDocumentJob when installed
+    // An optional document-processing integration can queue work here.
 });
 ```
 
@@ -235,7 +235,7 @@ use Eloquage\LaravelDocumentArchive\Support\ArchiveCapabilities;
 
 $this->app->bind(DocumentArchiveSearchContract::class, App\Search\ArchiveSearch::class);
 
-ArchiveCapabilities::searchEnabled(); // false with the default null service
+ArchiveCapabilities::searchEnabled(); // true after binding your search adapter
 ```
 
 Index name: `document-archive.vector_index` (default `document-archive`).
