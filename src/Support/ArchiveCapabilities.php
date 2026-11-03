@@ -13,6 +13,6 @@ class ArchiveCapabilities
     {
         $search = app(DocumentArchiveSearchContract::class);
 
-        return ! $search instanceof NullDocumentArchiveSearchService;
+        return get_class($search) !== NullDocumentArchiveSearchService::class;
     }
 }
